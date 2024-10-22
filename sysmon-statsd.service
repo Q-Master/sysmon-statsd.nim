@@ -1,0 +1,11 @@
+[Unit]
+Description=System monitoring and sending to StatsD
+
+[Service]
+ExecStart=/usr/local/bin/sysmon-statsd
+Restart=always
+Type=notify
+WatchdogSec=15s
+
+[Install]
+WantedBy=multi-user.target
