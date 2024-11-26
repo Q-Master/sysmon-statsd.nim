@@ -142,18 +142,19 @@ proc parseStat(): CpuInfo =
   result.new
   catchErr(file, PROCFS / "stat"):
     var name: string
-    var v1, v2, v3, v4, v5, v6, v7, v8: int
+    #     1     2      3      4      5     6      7      8
+    var user, nice, system, idle, iowait, irq, softirq, steal: int
 
     for line in lines(file):
       if line.startsWith("cpu"):
-        if scanf(line, "$w $s$i $i $i $i $i $i $i $i", name, v1, v2, v3, v4, v5, v6, v7, v8):
-          let total = uint(v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8)
-          let idle = uint(v4 + v5)
+        if scanf(line, "$w $s$i $i $i $i $i $i $i $i", name, user, nice, system, idle, iowait, irq, softirq, steal):
+          let total = uint(user + nice + system + idle + iowait + irq + softirq + steal)
+          let total_idle = uint(idle + iowait)
           if name == "cpu":
             let curTotal = checkedSub(total, (if prevInfo.isNil: 0.uint else: prevInfo.cpu.total))
-            let curIdle = checkedSub(idle, (if prevInfo.isNil: 0.uint else: prevInfo.cpu.idle))
+            let curIdle = checkedSub(total_idle, (if prevInfo.isNil: 0.uint else: prevInfo.cpu.idle))
             let cpu = checkedDiv(100 * (curTotal - curIdle), curTotal)
-            result = CpuInfo(total: total, idle: idle, cpu: cpu)
+            result = CpuInfo(total: total, idle: total_idle, cpu: cpu)
             break
 
 

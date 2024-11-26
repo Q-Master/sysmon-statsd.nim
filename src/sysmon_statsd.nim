@@ -64,7 +64,6 @@ proc initSelf(cfg: SysMonStatsdConfig): Self =
   result.statsDM = newStatsDClient(cfg.statsdHost, cfg.statsdPort, buffered=true)
   try:
     result.sdM = newSDNotify()
-    result.sdM.reset_watchdog_timer(cfg.updateInterval*1000 + 2000000)
     result.sdM.notify_ready()
   except:
     result.sdM = nil
@@ -78,12 +77,9 @@ proc main(cfg: SysMonStatsdConfig) =
     timeout += SLEEP_TIME
     timeout = timeout.mod(self.config.updateInterval)
     if timeout == 0:
-      if not self.sdM.isNil:
-        self.sdM.ping_watchdog()
       onTimerEvent()
-    if running == false:
-      if not self.sdM.isNil:
-        self.sdM.notify_stopping()
+  if not self.sdM.isNil:
+    self.sdM.notify_stopping()
 
 
 when isMainModule:
