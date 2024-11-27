@@ -43,6 +43,7 @@ proc onTimerEvent() =
       self.statsDM.gauge(cpuPart & ".la1", newInfo.cpu.la1)
       self.statsDM.gauge(cpuPart & ".la5", newInfo.cpu.la5)
       self.statsDM.gauge(cpuPart & ".la15", newInfo.cpu.la15)
+      self.statsDM.gauge(cpuPart & ".amount", newInfo.cpu.cpus)
     block:
       let diskPart = hostPart & ".disk"
       self.statsDM.gauge(diskPart & ".avail", newInfo.disk.avail)

@@ -30,6 +30,7 @@ type
     la1*: float
     la5*: float
     la15*: float
+    cpus*: uint
 
   SysInfo* = ref SysInfoObj
   SysInfoObj* = object
@@ -162,7 +163,11 @@ proc parseStat(): CpuInfo =
       result.la1 = la1
       result.la5 = la5
       result.la15 = la15
-
+  catchErr(file2, PROCFS / "cpuinfo"):
+    result.cpus = 0
+    for line in lines(file2):
+      if line.startsWith("processor"):
+        result.cpus.inc
 
 proc sysInfo(): SysInfo =
   result.new
