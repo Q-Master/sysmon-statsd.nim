@@ -27,11 +27,14 @@ type
     total*: uint
     idle*: uint
     cpu*: float
+    la1*: float
+    la5*: float
+    la15*: float
 
   SysInfo* = ref SysInfoObj
   SysInfoObj* = object
     hostname*: string
-    uptimeHz*: uint
+    uptime*: int
 
   Disk* = ref DiskObject
   DiskObject* = object
@@ -69,18 +72,14 @@ proc initProcFS*() =
   prevInfo = fullInfo()
   sleep hz
 
-proc newParseInfoError(file: string, parent: ref Exception): ref ParseInfoError =
-  let parentMsg = if parent != nil: parent.msg else: "nil"
-  var msg = "error during parsing " & file & ": " & parentMsg
-  newException(ParseInfoError, msg, parent)
-
 
 template catchErr(file: untyped, filename: string, body: untyped) =
   let file: string = filename
   try:
     body
   except CatchableError, Defect:
-    raise newParseInfoError(file, getCurrentException())
+    let exc = getCurrentException()
+    echo "Exception while reading " & file & ": " & (if exc.isNil: "None" else: getCurrentException().msg) 
 
 
 proc checkedSub(a, b: uint): uint =
@@ -93,12 +92,12 @@ proc checkedDiv(a, b: uint): float =
     return a.float / b.float
 
 
-proc parseUptime(): uint =
+proc parseUptime(): int =
   catchErr(file, PROCFS / "uptime"):
     let line = readLines(file, 1)[0]
     var f: float
     discard scanf(line, "$f", f)
-    result = uint(float(hz) * f)
+    result = f.int
 
 
 proc parseSize(str: string): uint =
@@ -156,12 +155,19 @@ proc parseStat(): CpuInfo =
             let cpu = checkedDiv(100 * (curTotal - curIdle), curTotal)
             result = CpuInfo(total: total, idle: total_idle, cpu: cpu)
             break
+  catchErr(file1, PROCFS / "loadavg"):
+    let line = readLines(file1, 1)[0]
+    var la1, la5, la15: float
+    if scanf(line, "$f $f $f", la1, la5, la15):
+      result.la1 = la1
+      result.la5 = la5
+      result.la15 = la15
 
 
 proc sysInfo(): SysInfo =
   result.new
   result.hostname = getHostName()
-  result.uptimeHz = parseUptime()
+  result.uptime = parseUptime()
 
 
 proc diskInfo(): Disk =

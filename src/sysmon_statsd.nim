@@ -40,6 +40,9 @@ proc onTimerEvent() =
       self.statsDM.gauge(cpuPart & ".total", newInfo.cpu.total)
       self.statsDM.gauge(cpuPart & ".idle", newInfo.cpu.idle)
       self.statsDM.gauge(cpuPart & ".cpu", newInfo.cpu.cpu)
+      self.statsDM.gauge(cpuPart & ".la1", newInfo.cpu.la1)
+      self.statsDM.gauge(cpuPart & ".la5", newInfo.cpu.la5)
+      self.statsDM.gauge(cpuPart & ".la15", newInfo.cpu.la15)
     block:
       let diskPart = hostPart & ".disk"
       self.statsDM.gauge(diskPart & ".avail", newInfo.disk.avail)
@@ -48,6 +51,10 @@ proc onTimerEvent() =
       let netPart = hostPart & ".net"
       self.statsDM.gauge(netPart & ".in", newInfo.net.netIn)
       self.statsDM.gauge(netPart & ".out", newInfo.net.netOut)
+      self.statsDM.gauge(netPart & ".currin", newInfo.net.netInDiff)
+      self.statsDM.gauge(netPart & ".currout", newInfo.net.netOutDiff)
+    block:
+      self.statsDM.gauge(hostPart & ".uptime", newInfo.sys.uptime)
     block:
       let tempPart = hostPart & ".temperature"
       if newInfo.temp.cpu.isSome:
