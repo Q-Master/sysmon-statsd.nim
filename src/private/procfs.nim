@@ -204,15 +204,14 @@ proc netInfo(): Net =
   result.netIn = 0
   result.netOut = 0
   catchErr(file, PROCFS / "net/dev"):
-    var i = 0
+    var tmp, netIn, netOut: int
+    var name: string
     for line in lines(file):
-      inc i
-      if i in 1..2:
-        continue
-      var name: string
-      var tmp, netIn, netOut: int
-      if not scanf(line, "$s${devName}:$s$i$s$i$s$i$s$i$s$i$s$i$s$i$s$i$s$i",
-          name, netIn, tmp, tmp, tmp, tmp, tmp, tmp, tmp, netOut):
+      name.setLen(0)
+      if not scanf(line, 
+          "$s${devName}:$s$i$s$i$s$i$s$i$s$i$s$i$s$i$s$i$s$i",
+          name, netIn, tmp, tmp, tmp, tmp, tmp, tmp, tmp, netOut
+      ):
         continue
       if name.startsWith("veth"):
         continue
@@ -224,8 +223,8 @@ proc netInfo(): Net =
         continue
       result.netIn += netIn.uint
       result.netOut += netOut.uint
-      result.netInDiff = checkedSub(netIn.uint, (if prevInfo.isNil: 0.uint else: prevInfo.net.netIn))
-      result.netOutDiff = checkedSub(netOut.uint, (if prevInfo.isNil: 0.uint else: prevInfo.net.netOut))
+    result.netInDiff = checkedSub(result.netIn.uint, (if prevInfo.isNil: 0.uint else: prevInfo.net.netIn))
+    result.netOutDiff = checkedSub(result.netOut.uint, (if prevInfo.isNil: 0.uint else: prevInfo.net.netOut))
 
 
 proc findMaxTemp(dir: string): Option[float64] =
